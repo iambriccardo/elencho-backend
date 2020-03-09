@@ -1,4 +1,4 @@
-module github.com/heroku/go-getting-started
+module github.com/RiccardoBusetti/elencho-scraper
 
 go 1.12
 

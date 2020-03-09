@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/RiccardoBusetti/elencho-scraper/elencho"
 	"github.com/gin-gonic/gin"
-	"github.com/heroku/go-getting-started/elencho"
 	_ "github.com/heroku/x/hmetrics/onload"
 )
 
@@ -22,6 +22,14 @@ func getRoutes(db *elencho.Database) []Endpoint {
 				elencho.Start(db)
 				c.JSON(200, gin.H{
 					"Status": "The service has successfully updated its database.",
+				})
+			},
+		},
+		{
+			RelativePath: "/test",
+			Handler: func(c *gin.Context) {
+				c.JSON(200, gin.H{
+					"Status": "This is a test endpoint.",
 				})
 			},
 		},
