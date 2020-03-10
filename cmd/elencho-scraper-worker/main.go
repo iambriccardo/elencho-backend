@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/RiccardoBusetti/elencho-scraper/elencho"
 	"os"
 	"os/signal"
@@ -34,5 +35,8 @@ func task() {
 	db := elencho.Make()
 	db.Open()
 	defer db.Close()
-	elencho.Start(db)
+	err := elencho.Start(db)
+	if err != nil {
+		fmt.Printf("an error occurred while running the scraper: %q", err)
+	}
 }

@@ -17,3 +17,4 @@ vendor/
 # IDE specific files
 .idea/
 .env
+/bin/

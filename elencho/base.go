@@ -50,7 +50,7 @@ func (db *Database) Insert(query sq.InsertBuilder) error {
 	return nil
 }
 
-func (db *Database) Select(query sq.SelectBuilder, block func(*sql.Rows) interface{}) ([]interface{}, error) {
+func (db *Database) Select(query sq.SelectBuilder, block func(*sql.Rows) (interface{}, error)) ([]interface{}, error) {
 	rows, err := query.PlaceholderFormat(sq.Dollar).RunWith(db.instance).Query()
 	if err != nil {
 		return nil, fmt.Errorf("error while getting performing select query '%s': %q", query, err)
@@ -58,7 +58,12 @@ func (db *Database) Select(query sq.SelectBuilder, block func(*sql.Rows) interfa
 
 	mappedRows := make([]interface{}, 0)
 	for rows.Next() {
-		mappedRows = append(mappedRows, block(rows))
+		value, err := block(rows)
+		if err != nil {
+			return nil, fmt.Errorf("error while reading columns: %q", err)
+		}
+
+		mappedRows = append(mappedRows, value)
 	}
 
 	return mappedRows, nil
@@ -82,10 +87,16 @@ func (db *Database) Truncate(tableNames []string) error {
 			return fmt.Errorf("error while executing statement: %q", err)
 		}
 
-		stmt.Close()
+		err = stmt.Close()
+		if err != nil {
+			return fmt.Errorf("error while close the statement: %q", err)
+		}
 	}
 
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("error while committing the transaction: %q", err)
+	}
 
 	return nil
 }

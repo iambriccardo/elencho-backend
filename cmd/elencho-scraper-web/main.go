@@ -20,22 +20,43 @@ func getRoutes(db *elencho.Database) []Endpoint {
 			RelativePath: "/",
 			Handler: func(c *gin.Context) {
 				c.JSON(200, gin.H{
-					"Status": "The service has successfully updated its database.",
+					"Status": "The service is up and running correctly.",
 				})
 			},
 		},
 		{
-			RelativePath: "/test",
+			RelativePath: "/departments",
 			Handler: func(c *gin.Context) {
-				c.JSON(200, gin.H{
-					"Status": "This is a test endpoint.",
-				})
+				d, err := elencho.Departments(db)
+				if err != nil {
+					c.JSON(500, err)
+				} else {
+					c.JSON(200, d)
+				}
 			},
 		},
 		{
-			RelativePath: "/departments/:key",
+			RelativePath: "/degrees",
 			Handler: func(c *gin.Context) {
-
+				departmentId := c.DefaultQuery("departmentId", "")
+				d, err := elencho.Degrees(db, departmentId)
+				if err != nil {
+					c.JSON(500, err)
+				} else {
+					c.JSON(200, d)
+				}
+			},
+		},
+		{
+			RelativePath: "/studyPlans",
+			Handler: func(c *gin.Context) {
+				degreeId := c.DefaultQuery("degreeId", "")
+				s, err := elencho.StudyPlans(db, degreeId)
+				if err != nil {
+					c.JSON(500, err)
+				} else {
+					c.JSON(200, s)
+				}
 			},
 		},
 	}

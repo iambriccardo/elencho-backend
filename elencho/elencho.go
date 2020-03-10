@@ -5,14 +5,38 @@ import "log"
 const databaseUrlEnv = "DATABASE_URL"
 const noValue = ""
 
-func Start(db *Database) {
+func Start(db *Database) error {
 	log.Printf("starting preparing the courses database")
 	db.ClearTables()
-	for _, department := range db.GetDepartments("") {
+
+	departments, err := db.GetDepartments("")
+	if err != nil {
+		return err
+	}
+	for _, department := range departments {
 		ParseAndInsertDegrees(db, department)
-		for _, degree := range db.GetDegrees(department.Id, "") {
+
+		degrees, err := db.GetDegrees(department.Id, "")
+		if err != nil {
+			return err
+		}
+
+		for _, degree := range degrees {
 			ParseAndInsertStudyPlans(db, degree)
 		}
 	}
 	log.Println("finished preparing the courses database")
+	return nil
+}
+
+func Departments(db *Database) ([]Department, error) {
+	return db.GetDepartments("")
+}
+
+func Degrees(db *Database, departmentId string) ([]Degree, error) {
+	return db.GetDegrees(departmentId, "")
+}
+
+func StudyPlans(db *Database, degreeId string) ([]StudyPlan, error) {
+	return db.GetStudyPlans(degreeId, "")
 }

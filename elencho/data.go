@@ -38,32 +38,39 @@ func (db *Database) ClearTables() {
 	}
 }
 
-func (db *Database) GetDepartments(departmentKey string) []Department {
+func (db *Database) GetDepartments(departmentKey string) ([]Department, error) {
 	query := sq.StatementBuilder.PlaceholderFormat(sq.Dollar).Select("*").From("department")
 
 	if departmentKey != noValue {
 		query = query.Where(sq.Eq{"department_key": departmentKey})
 	}
 
-	rows, _ := db.Select(query, func(rows *sql.Rows) interface{} {
+	rows, err := db.Select(query, func(rows *sql.Rows) (interface{}, error) {
 		var id, key, name string
-		rows.Scan(&id, &key, &name)
+		err := rows.Scan(&id, &key, &name)
+		if err != nil {
+			return nil, err
+		}
+
 		return Department{
 			Id:   id,
 			Key:  key,
 			Name: name,
-		}
+		}, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	departments := make([]Department, 0)
 	for _, v := range rows {
 		departments = append(departments, v.(Department))
 	}
 
-	return departments
+	return departments, nil
 }
 
-func (db *Database) GetDegrees(departmentId string, degreeKey string) []Degree {
+func (db *Database) GetDegrees(departmentId string, degreeKey string) ([]Degree, error) {
 	query := sq.Select("*").From("degree")
 
 	if departmentId != noValue {
@@ -74,25 +81,32 @@ func (db *Database) GetDegrees(departmentId string, degreeKey string) []Degree {
 		query = query.Where(sq.Eq{"degree_key": degreeKey})
 	}
 
-	rows, _ := db.Select(query, func(rows *sql.Rows) interface{} {
+	rows, err := db.Select(query, func(rows *sql.Rows) (interface{}, error) {
 		var id, fk, key, name string
-		rows.Scan(&id, &fk, &key, &name)
+		err := rows.Scan(&id, &fk, &key, &name)
+		if err != nil {
+			return nil, err
+		}
+
 		return Degree{
 			Id:   id,
 			Key:  key,
 			Name: name,
-		}
+		}, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	degrees := make([]Degree, 0)
 	for _, v := range rows {
 		degrees = append(degrees, v.(Degree))
 	}
 
-	return degrees
+	return degrees, nil
 }
 
-func (db *Database) GetStudyPlans(degreeId string, studyPlanKey string) []StudyPlan {
+func (db *Database) GetStudyPlans(degreeId string, studyPlanKey string) ([]StudyPlan, error) {
 	query := sq.Select("*").From("study_plan")
 
 	if degreeId != noValue {
@@ -103,22 +117,29 @@ func (db *Database) GetStudyPlans(degreeId string, studyPlanKey string) []StudyP
 		query = query.Where(sq.Eq{"study_plan_key": studyPlanKey})
 	}
 
-	rows, _ := db.Select(query, func(rows *sql.Rows) interface{} {
+	rows, err := db.Select(query, func(rows *sql.Rows) (interface{}, error) {
 		var id, fk, key, year string
-		rows.Scan(&id, &fk, &key, &year)
+		err := rows.Scan(&id, &fk, &key, &year)
+		if err != nil {
+			return nil, err
+		}
+
 		return StudyPlan{
 			Id:   id,
 			Key:  key,
 			Year: year,
-		}
+		}, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	studyPlans := make([]StudyPlan, 0)
 	for _, v := range rows {
 		studyPlans = append(studyPlans, v.(StudyPlan))
 	}
 
-	return studyPlans
+	return studyPlans, nil
 }
 
 func (db *Database) InsertDegrees(department Department, degrees []Degree) {
