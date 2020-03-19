@@ -36,11 +36,11 @@ func task() {
 	db := elencho.Make()
 	err := db.Open()
 	if err != nil {
-		fmt.Printf("an error occurred while running the scraper: %q", err)
+		fmt.Printf("an error occurred in worker: %q", err)
 	}
 	defer db.Close()
 	err = elencho.Start(db)
 	if err != nil {
-		fmt.Printf("an error occurred while running the scraper: %q", err)
+		fmt.Printf("an error occurred in worker: %q", err)
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -59,6 +60,19 @@ func getRoutes(db *elencho.Database) []Endpoint {
 				}
 			},
 		},
+		{
+			RelativePath: "/checkAvailability",
+			Handler: func(c *gin.Context) {
+				courses, err := elencho.CheckAvailability()
+				if err != nil {
+					c.JSON(500, gin.H{
+						"Response": err,
+					})
+				} else {
+					c.JSON(200, courses)
+				}
+			},
+		},
 	}
 }
 
@@ -73,12 +87,18 @@ func main() {
 	router.Use(gin.Logger())
 
 	db := elencho.Make()
-	db.Open()
+	err := db.Open()
+	if err != nil {
+		fmt.Printf("an error occurred the web: %q", err)
+	}
 	defer db.Close()
 
 	for _, e := range getRoutes(db) {
 		router.GET(e.RelativePath, e.Handler)
 	}
 
-	router.Run(":" + port)
+	err = router.Run(":" + port)
+	if err != nil {
+		fmt.Printf("an error occurred in web: %q", err)
+	}
 }

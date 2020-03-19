@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/gocolly/colly"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -101,6 +102,7 @@ func (db *Database) Truncate(tableNames []string) error {
 	return nil
 }
 
+// TODO: return error not Fatal
 func connect(url string) []map[string]interface{} {
 	client := http.Client{
 		Timeout: time.Second * 10, // Maximum of 10 seconds because we don't need quick response time.
@@ -135,4 +137,14 @@ func connect(url string) []map[string]interface{} {
 	}
 
 	return r
+}
+
+func Scrape(url string, goquerySelector string, block func(e *colly.HTMLElement)) error {
+	c := colly.NewCollector()
+	c.OnHTML(goquerySelector, block)
+	err := c.Visit(url)
+	if err != nil {
+		return fmt.Errorf("an error occurred while scraping the unibz website: %q", err)
+	}
+	return nil
 }

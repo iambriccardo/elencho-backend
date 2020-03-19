@@ -1,9 +1,12 @@
 package elencho
 
-import "log"
+import (
+	"log"
+)
 
 const databaseUrlEnv = "DATABASE_URL"
 const noValue = ""
+const timetableBaseUrl = "https://www.unibz.it/en/timetable"
 
 func Start(db *Database) error {
 	log.Printf("starting preparing the courses database")
@@ -39,4 +42,8 @@ func Degrees(db *Database, departmentId string) ([]Degree, error) {
 
 func StudyPlans(db *Database, degreeId string) ([]StudyPlan, error) {
 	return db.GetStudyPlans(degreeId, "")
+}
+
+func CheckAvailability() ([]Course, error) {
+	return GetCourses(timetableBaseUrl)
 }

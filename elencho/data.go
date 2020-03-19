@@ -4,9 +4,37 @@ import (
 	"database/sql"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/gocolly/colly"
 	_ "github.com/lib/pq"
 	"log"
+	"strconv"
+	"strings"
+	t "time"
 )
+
+// In both Urls we use English as language. For now we will support only
+// English and further in the future new language support will be added.
+const timetableFormBaseUrl = "https://www.unibz.it/en/timetable/PowerToolsForm/field"
+
+// CSS queries used by the scraper to find specific course data in the website.
+const allDaysQuery = "article"
+const allCoursesQuery = ".u-pbi-avoid"
+const dayDateQuery = "h2"
+const courseRoomQuery = ".u-push-btm-quarter"
+const courseDescriptionQuery = ".u-push-btm-1"
+const courseProfessorQuery = ".actionLink"
+const courseTimeAndType = ".u-push-btm-none:first-of-type"
+
+// Time formats.
+const inputDateTimeFormat = "Monday, 02 Jan 2006 15:04"
+const outputDateTimeFormat = "2006-01-02 15:04"
+
+// Other constants.
+const space = " "
+const nothing = ""
+const dot = "·"
+const minus = "-"
+const newLine = "\n"
 
 type Department struct {
 	Id   string `json:"id"`
@@ -26,7 +54,14 @@ type StudyPlan struct {
 	Year string `json:"year"`
 }
 
-const baseUrl = "https://www.unibz.it/en/timetable/PowerToolsForm/field"
+type Course struct {
+	Start       t.Time `json:"start"`
+	End         t.Time `json:"end"`
+	Room        string `json:"room"`
+	Description string `json:"description"`
+	Professor   string `json:"professor"`
+	Type        string `json:"type"`
+}
 
 func (db *Database) ClearTables() {
 	err := db.Truncate([]string{
@@ -169,7 +204,7 @@ func (db *Database) InsertStudyPlans(degree Degree, studyPlans []StudyPlan) {
 func ParseAndInsertDegrees(db *Database, department Department) {
 	degrees := make([]Degree, 0)
 
-	for _, v := range connect(fmt.Sprintf("%s/degree/load?val=%s", baseUrl, department.Key)) {
+	for _, v := range connect(fmt.Sprintf("%s/degree/load?val=%s", timetableFormBaseUrl, department.Key)) {
 		degrees = append(degrees, Degree{
 			Id:   "",
 			Key:  v["k"].(string),
@@ -183,7 +218,7 @@ func ParseAndInsertDegrees(db *Database, department Department) {
 func ParseAndInsertStudyPlans(db *Database, degree Degree) {
 	studyPlans := make([]StudyPlan, 0)
 
-	for _, v := range connect(fmt.Sprintf("%s/studyPlan/load?val=%s", baseUrl, degree.Key)) {
+	for _, v := range connect(fmt.Sprintf("%s/studyPlan/load?val=%s", timetableFormBaseUrl, degree.Key)) {
 		studyPlans = append(studyPlans, StudyPlan{
 			Id:   "",
 			Key:  v["k"].(string),
@@ -192,4 +227,62 @@ func ParseAndInsertStudyPlans(db *Database, degree Degree) {
 	}
 
 	db.InsertStudyPlans(degree, studyPlans)
+}
+
+func GetCourses(url string) ([]Course, error) {
+	courses := make([]Course, 0)
+
+	err := Scrape(url, allDaysQuery, func(e *colly.HTMLElement) {
+		prevRoom := nothing
+		day := e.ChildText(dayDateQuery)
+		year := strconv.FormatInt(int64(t.Now().Year()), 10)
+
+		e.ForEach(allCoursesQuery, func(i int, e *colly.HTMLElement) {
+			course := Course{}
+
+			courseStartTime, courseEndTime, courseType := getCourseTimeAndType(e)
+
+			start, err := computeCourseDateTime(day, year, courseStartTime)
+			if err == nil {
+				course.Start = *start
+			}
+
+			end, err := computeCourseDateTime(day, year, courseEndTime)
+			if err == nil {
+				course.End = *end
+			}
+
+			courseRoom := e.ChildText(courseRoomQuery)
+			if len(courseRoom) > 0 {
+				course.Room = courseRoom
+				prevRoom = courseRoom
+			} else {
+				course.Room = prevRoom
+			}
+
+			course.Description = e.ChildText(courseDescriptionQuery)
+			course.Professor = e.ChildText(courseProfessorQuery)
+			course.Type = courseType
+
+			courses = append(courses, course)
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return courses, nil
+}
+
+func getCourseTimeAndType(e *colly.HTMLElement) (string, string, string) {
+	text := e.ChildText(courseTimeAndType)
+	text = strings.ReplaceAll(text, space, nothing)
+	text = strings.ReplaceAll(text, newLine, nothing)
+
+	timesAndType := strings.Split(text, dot)
+
+	times := timesAndType[0]
+	courseTimes := strings.Split(times, minus)
+
+	return courseTimes[0], courseTimes[1], timesAndType[1]
 }
