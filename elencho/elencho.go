@@ -94,7 +94,7 @@ func getRooms(courses []Course) []string {
 func getCoursesByRoom(courses []Course, roomName string, deviceTime time.Time) []Course {
 	fCourses := make([]Course, 0)
 	for _, v := range courses {
-		if v.Room == roomName && (isCourseNow(v, deviceTime) || isCourseUpcoming(v, deviceTime)) {
+		if v.Room == roomName {
 			fCourses = append(fCourses, v)
 		}
 	}
@@ -105,13 +105,13 @@ func getCoursesByRoom(courses []Course, roomName string, deviceTime time.Time) [
 func getAvailableTimeSlots(courses []Course, deviceTime time.Time) []map[string]interface{} {
 	availableTimeSlots := make([]map[string]interface{}, 0)
 
+	courses = computeBusyTimeSlots(courses)
+
 	if len(courses) > 0 {
-		if isCourseUpcoming(courses[0], deviceTime) {
-			availableTimeSlots = append(availableTimeSlots, map[string]interface{}{
-				"from": nil,
-				"to":   courses[0].Start,
-			})
-		}
+		availableTimeSlots = append(availableTimeSlots, map[string]interface{}{
+			"from": nil,
+			"to":   courses[0].Start,
+		})
 
 		for i := 0; i < len(courses)-1; i++ {
 			course1 := courses[i]
@@ -134,9 +134,57 @@ func getAvailableTimeSlots(courses []Course, deviceTime time.Time) []map[string]
 	return availableTimeSlots
 }
 
-// TODO: check also if one course is withing the time of the other and vice versa.
+func computeBusyTimeSlots(courses []Course) []Course {
+	filteredCourses := make([]Course, 0)
+
+	for _, course1 := range courses {
+		if len(filteredCourses) == 0 {
+			filteredCourses = append(filteredCourses, course1)
+		} else {
+			found := false
+			i := 0
+			for i < len(filteredCourses) && !found {
+				course2 := filteredCourses[i]
+				if haveSameTime(course1, course2) {
+					found = true
+				} else if isWithinOtherCourse(course1, course2) {
+					found = true
+				} else if isLongerThanOtherCourse(course1, course2) {
+					filteredCourses[i] = course1
+					found = true
+				} else if isOverlappingWithOtherCourse(course1, course2) {
+					filteredCourses[i] = Course{
+						Start: course2.Start,
+						End:   course1.End,
+					}
+					found = true
+				}
+				i++
+			}
+
+			if !found {
+				filteredCourses = append(filteredCourses, course1)
+			}
+		}
+	}
+
+	return filteredCourses
+}
+
 func haveSameTime(course1 Course, course2 Course) bool {
 	return course1.Start.Equal(course2.Start) && course1.End.Equal(course2.End)
+}
+
+func isWithinOtherCourse(course1 Course, course2 Course) bool {
+	return course1.Start.Equal(course2.Start) || course1.Start.After(course2.Start) && course1.End.Before(course2.End)
+}
+
+func isLongerThanOtherCourse(course1 Course, course2 Course) bool {
+	return course1.Start.Equal(course2.Start) && course1.End.After(course2.End)
+}
+
+func isOverlappingWithOtherCourse(course1 Course, course2 Course) bool {
+	return course1.Start.After(course2.Start) && course1.End.Before(course2.Start) && course1.End.After(course2.End)
 }
 
 func havePause(course1 Course, course2 Course) bool {
