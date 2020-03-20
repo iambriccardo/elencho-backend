@@ -108,7 +108,7 @@ func getAvailableTimeSlots(courses []Course, deviceTime time.Time) []map[string]
 	if len(courses) > 0 {
 		if isCourseUpcoming(courses[0], deviceTime) {
 			availableTimeSlots = append(availableTimeSlots, map[string]interface{}{
-				"from": "",
+				"from": nil,
 				"to":   courses[0].Start,
 			})
 		}
@@ -127,7 +127,7 @@ func getAvailableTimeSlots(courses []Course, deviceTime time.Time) []map[string]
 
 		availableTimeSlots = append(availableTimeSlots, map[string]interface{}{
 			"from": courses[len(courses)-1].End,
-			"to":   noValue,
+			"to":   nil,
 		})
 	}
 
