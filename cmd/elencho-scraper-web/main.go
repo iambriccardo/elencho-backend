@@ -69,9 +69,9 @@ func getRoutes(db *elencho.Database) []Endpoint {
 		{
 			RelativePath: "/checkAvailability",
 			Handler: func(c *gin.Context) {
-				roomName := c.DefaultQuery("roomName", "")
+				room := c.DefaultQuery("room", "")
 				deviceTime := c.DefaultQuery("deviceTime", "")
-				availability, err := elencho.CheckAvailability(roomName, deviceTime)
+				availability, err := elencho.CheckAvailability(room, deviceTime)
 				if err != nil {
 					c.JSON(500, gin.H{
 						"Response": err.Error(),

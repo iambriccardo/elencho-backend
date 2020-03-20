@@ -48,23 +48,23 @@ func StudyPlans(db *Database, degreeId string) ([]StudyPlan, error) {
 	return db.GetStudyPlans(degreeId, "")
 }
 
-func CheckAvailability(roomName string, deviceTime string) (map[string]interface{}, error) {
-	if roomName == noValue || deviceTime == noValue {
+func CheckAvailability(room string, deviceTime string) (map[string]interface{}, error) {
+	if room == noValue || deviceTime == noValue {
 		return nil, fmt.Errorf("error while checking availability: you must choose a room and your current time")
 	}
 
-	log.Printf("checking availability for room %s from time %s", roomName, deviceTime)
+	log.Printf("checking availability for room %s from time %s", room, deviceTime)
 	courses, err := GetCourses(timetableBaseUrl)
 	if err != nil {
 		return nil, fmt.Errorf("error while checking availability: %q", err)
 	}
 
 	rooms := getRooms(courses)
-	matches := fuzzy.RankFind(roomName, rooms)
+	matches := fuzzy.RankFind(room, rooms)
 	sort.Sort(matches)
 	if len(matches) > 0 {
-		log.Printf("estimation of room %s is %s", roomName, matches[0].Target)
-		roomName = matches[0].Target
+		log.Printf("estimation of room %s is %s", room, matches[0].Target)
+		room = matches[0].Target
 	}
 
 	deviceTimeConverted, err := computeDeviceTime(deviceTime)
@@ -72,12 +72,12 @@ func CheckAvailability(roomName string, deviceTime string) (map[string]interface
 		return nil, fmt.Errorf("error while checking availability: %q", err)
 	}
 
-	courses = getCoursesByRoom(courses, roomName, *deviceTimeConverted)
+	courses = getCoursesByRoom(courses, room, *deviceTimeConverted)
 
 	log.Printf("computing available time slots")
 	return map[string]interface{}{
-		"room":         roomName,
-		"availability": getAvailableTimeSlots(courses, *deviceTimeConverted),
+		"room":           room,
+		"availabilities": getAvailableTimeSlots(courses, *deviceTimeConverted),
 	}, nil
 }
 
