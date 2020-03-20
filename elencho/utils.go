@@ -6,7 +6,15 @@ import (
 )
 
 func computeCourseDateTime(day string, year string, time string) (*t.Time, error) {
-	result, err := t.Parse(inputDateTimeFormat, fmt.Sprintf("%s %s %s", day, year, time))
+	return convertStringToTime(fmt.Sprintf("%s %s %s", day, year, time), inputDateTimeFormat)
+}
+
+func computeDeviceTime(deviceTime string) (*t.Time, error) {
+	return convertStringToTime(deviceTime, outputDateTimeFormat)
+}
+
+func convertStringToTime(date string, format string) (*t.Time, error) {
+	result, err := t.Parse(format, date)
 	if err != nil {
 		return nil, err
 	}

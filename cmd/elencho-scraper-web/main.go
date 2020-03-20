@@ -30,7 +30,9 @@ func getRoutes(db *elencho.Database) []Endpoint {
 			Handler: func(c *gin.Context) {
 				d, err := elencho.Departments(db)
 				if err != nil {
-					c.JSON(500, err)
+					c.JSON(500, gin.H{
+						"Response": err.Error(),
+					})
 				} else {
 					c.JSON(200, d)
 				}
@@ -42,7 +44,9 @@ func getRoutes(db *elencho.Database) []Endpoint {
 				departmentId := c.DefaultQuery("departmentId", "")
 				d, err := elencho.Degrees(db, departmentId)
 				if err != nil {
-					c.JSON(500, err)
+					c.JSON(500, gin.H{
+						"Response": err.Error(),
+					})
 				} else {
 					c.JSON(200, d)
 				}
@@ -54,7 +58,9 @@ func getRoutes(db *elencho.Database) []Endpoint {
 				degreeId := c.DefaultQuery("degreeId", "")
 				s, err := elencho.StudyPlans(db, degreeId)
 				if err != nil {
-					c.JSON(500, err)
+					c.JSON(500, gin.H{
+						"Response": err.Error(),
+					})
 				} else {
 					c.JSON(200, s)
 				}
@@ -63,13 +69,15 @@ func getRoutes(db *elencho.Database) []Endpoint {
 		{
 			RelativePath: "/checkAvailability",
 			Handler: func(c *gin.Context) {
-				courses, err := elencho.CheckAvailability()
+				roomName := c.DefaultQuery("roomName", "")
+				deviceTime := c.DefaultQuery("deviceTime", "")
+				availability, err := elencho.CheckAvailability(roomName, deviceTime)
 				if err != nil {
 					c.JSON(500, gin.H{
-						"Response": err,
+						"Response": err.Error(),
 					})
 				} else {
-					c.JSON(200, courses)
+					c.JSON(200, availability)
 				}
 			},
 		},

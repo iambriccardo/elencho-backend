@@ -17,6 +17,7 @@ require (
 	github.com/jawher/mow.cli v1.1.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/lib/pq v1.3.0
+	github.com/lithammer/fuzzysearch v1.1.0
 	github.com/manucorporat/sse v0.0.0-20150604091100-c142f0f1baea // indirect
 	github.com/mattn/go-colorable v0.0.0-20150625154642-40e4aedc8fab // indirect
 	github.com/mattn/go-isatty v0.0.0-20150814002629-7fcbc72f853b // indirect
