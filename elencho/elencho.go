@@ -65,6 +65,8 @@ func CheckAvailability(room string, deviceTime string) (map[string]interface{}, 
 	if len(matches) > 0 {
 		log.Printf("estimation of room %s is %s", room, matches[0].Target)
 		room = matches[0].Target
+	} else {
+		return nil, fmt.Errorf("error while checking availability: the room does not exist")
 	}
 
 	// Use device time if needed.
