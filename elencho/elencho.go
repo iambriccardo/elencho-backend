@@ -62,11 +62,10 @@ func CheckAvailability(room string, deviceTime string) (map[string]interface{}, 
 	rooms := getRooms(courses)
 	matches := fuzzy.RankFind(room, rooms)
 	sort.Sort(matches)
+	// TODO: implement mechanism to check if class name is correct based on all the possible class names.
 	if len(matches) > 0 {
 		log.Printf("estimation of room %s is %s", room, matches[0].Target)
 		room = matches[0].Target
-	} else {
-		return nil, fmt.Errorf("error while checking availability: the room does not exist")
 	}
 
 	// Use device time if needed.
