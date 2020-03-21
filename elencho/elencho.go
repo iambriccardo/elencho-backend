@@ -199,7 +199,7 @@ func isLongerThanOtherCourse(course1 Course, course2 Course) bool {
 }
 
 func isOverlappingWithOtherCourse(course1 Course, course2 Course) bool {
-	return course1.Start.After(course2.Start) && course1.End.After(course2.End)
+	return course1.Start.After(course2.Start) && course1.Start.Before(course2.End) && course1.End.After(course2.End)
 }
 
 func havePause(course1 Course, course2 Course) bool {
