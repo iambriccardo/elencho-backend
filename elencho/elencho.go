@@ -67,17 +67,20 @@ func CheckAvailability(room string, deviceTime string) (map[string]interface{}, 
 		room = matches[0].Target
 	}
 
-	deviceTimeConverted, err := computeDeviceTime(deviceTime)
-	if err != nil {
-		return nil, fmt.Errorf("error while checking availability: %q", err)
-	}
+	// Use device time if needed.
+	//deviceTimeConverted, err := computeDeviceTime(deviceTime)
+	//if err != nil {
+	//	return nil, fmt.Errorf("error while checking availability: %q", err)
+	//}
 
-	courses = getCoursesByRoom(courses, room, *deviceTimeConverted)
+	courses = getCoursesByRoom(courses, room)
 
 	log.Printf("computing available time slots")
+	timeSlots, isDayEmpty := getAvailableTimeSlots(courses)
 	return map[string]interface{}{
 		"room":           room,
-		"availabilities": getAvailableTimeSlots(courses, *deviceTimeConverted),
+		"isDayEmpty":     isDayEmpty,
+		"availabilities": timeSlots,
 	}, nil
 }
 
@@ -91,7 +94,7 @@ func getRooms(courses []Course) []string {
 	return rooms
 }
 
-func getCoursesByRoom(courses []Course, roomName string, deviceTime time.Time) []Course {
+func getCoursesByRoom(courses []Course, roomName string) []Course {
 	fCourses := make([]Course, 0)
 	for _, v := range courses {
 		if v.Room == roomName {
@@ -102,8 +105,10 @@ func getCoursesByRoom(courses []Course, roomName string, deviceTime time.Time) [
 	return fCourses
 }
 
-func getAvailableTimeSlots(courses []Course, deviceTime time.Time) []map[string]interface{} {
+func getAvailableTimeSlots(courses []Course) ([]map[string]interface{}, bool) {
 	availableTimeSlots := make([]map[string]interface{}, 0)
+
+	isDayEmpty := len(courses) == 0
 
 	courses = computeBusyTimeSlots(courses)
 
@@ -131,7 +136,7 @@ func getAvailableTimeSlots(courses []Course, deviceTime time.Time) []map[string]
 		})
 	}
 
-	return availableTimeSlots
+	return availableTimeSlots, isDayEmpty
 }
 
 func computeBusyTimeSlots(courses []Course) []Course {
@@ -143,28 +148,37 @@ func computeBusyTimeSlots(courses []Course) []Course {
 		} else {
 			found := false
 			i := 0
+			fmt.Printf("Course 1 %d-%d\n", course1.Start.Hour(), course1.End.Hour())
 			for i < len(filteredCourses) && !found {
 				course2 := filteredCourses[i]
+				fmt.Printf("Course 2 %d-%d\n", course2.Start.Hour(), course2.End.Hour())
 				if haveSameTime(course1, course2) {
 					found = true
+					fmt.Println("Same time")
 				} else if isWithinOtherCourse(course1, course2) {
 					found = true
+					fmt.Println("Within")
 				} else if isLongerThanOtherCourse(course1, course2) {
 					filteredCourses[i] = course1
 					found = true
+					fmt.Println("Longer")
 				} else if isOverlappingWithOtherCourse(course1, course2) {
 					filteredCourses[i] = Course{
 						Start: course2.Start,
 						End:   course1.End,
 					}
 					found = true
+					fmt.Println("Overlapping")
 				}
 				i++
 			}
 
 			if !found {
 				filteredCourses = append(filteredCourses, course1)
+				fmt.Println("Inserting")
 			}
+
+			fmt.Println("\n----\n")
 		}
 	}
 
@@ -176,7 +190,7 @@ func haveSameTime(course1 Course, course2 Course) bool {
 }
 
 func isWithinOtherCourse(course1 Course, course2 Course) bool {
-	return course1.Start.Equal(course2.Start) || course1.Start.After(course2.Start) && course1.End.Before(course2.End)
+	return (course1.Start.Equal(course2.Start) || course1.Start.After(course2.Start)) && (course1.End.Equal(course2.End) || course1.End.Before(course2.End))
 }
 
 func isLongerThanOtherCourse(course1 Course, course2 Course) bool {
@@ -184,7 +198,7 @@ func isLongerThanOtherCourse(course1 Course, course2 Course) bool {
 }
 
 func isOverlappingWithOtherCourse(course1 Course, course2 Course) bool {
-	return course1.Start.After(course2.Start) && course1.End.Before(course2.Start) && course1.End.After(course2.End)
+	return course1.Start.After(course2.Start) && course1.End.After(course2.End)
 }
 
 func havePause(course1 Course, course2 Course) bool {
