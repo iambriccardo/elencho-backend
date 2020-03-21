@@ -20,3 +20,11 @@ func convertStringToTime(date string, format string) (*t.Time, error) {
 	}
 	return &result, nil
 }
+
+func computeUnibzDateAsString(time t.Time) string {
+	return convertTimeToString(time, unibzDateFormat)
+}
+
+func convertTimeToString(time t.Time, format string) string {
+	return time.Format(format)
+}

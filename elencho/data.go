@@ -28,6 +28,7 @@ const courseTimeAndType = ".u-push-btm-none:first-of-type"
 // Time formats.
 const inputDateTimeFormat = "Monday, 02 Jan 2006 15:04"
 const outputDateTimeFormat = "2006-01-02 15:04"
+const unibzDateFormat = "2006-01-02"
 
 // Other constants.
 const space = " "
@@ -229,8 +230,12 @@ func ParseAndInsertStudyPlans(db *Database, degree Degree) {
 	db.InsertStudyPlans(degree, studyPlans)
 }
 
-func GetCourses(url string) ([]Course, error) {
+func GetDailyCourses(url string, deviceTime t.Time) ([]Course, error) {
 	courses := make([]Course, 0)
+
+	time := computeUnibzDateAsString(deviceTime)
+	url = fmt.Sprintf("%s/?fromDate=%s&toDate=%s", url, time, time)
+	fmt.Printf("scraping courses at %s", url)
 
 	err := Scrape(url, allDaysQuery, func(e *colly.HTMLElement) {
 		prevRoom := nothing

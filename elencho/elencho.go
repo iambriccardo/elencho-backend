@@ -53,8 +53,13 @@ func CheckAvailability(room string, deviceTime string) (map[string]interface{}, 
 		return nil, fmt.Errorf("error while checking availability: you must choose a room and your current time")
 	}
 
+	deviceTimeConverted, err := computeDeviceTime(deviceTime)
+	if err != nil {
+		return nil, fmt.Errorf("error while checking availability: %q", err)
+	}
+
 	log.Printf("checking availability for room %s from time %s", room, deviceTime)
-	courses, err := GetCourses(timetableBaseUrl)
+	courses, err := GetDailyCourses(timetableBaseUrl, *deviceTimeConverted)
 	if err != nil {
 		return nil, fmt.Errorf("error while checking availability: %q", err)
 	}
@@ -67,12 +72,6 @@ func CheckAvailability(room string, deviceTime string) (map[string]interface{}, 
 		log.Printf("estimation of room %s is %s", room, matches[0].Target)
 		room = matches[0].Target
 	}
-
-	// Use device time if needed.
-	//deviceTimeConverted, err := computeDeviceTime(deviceTime)
-	//if err != nil {
-	//	return nil, fmt.Errorf("error while checking availability: %q", err)
-	//}
 
 	courses = getCoursesByRoom(courses, room)
 
