@@ -48,7 +48,7 @@ func StudyPlans(db *Database, degreeId string) ([]StudyPlan, error) {
 	return db.GetStudyPlans(degreeId, "")
 }
 
-func CheckAvailability(room string, deviceTime string) (map[string]interface{}, error) {
+func CheckRoomAvailability(room string, deviceTime string) (map[string]interface{}, error) {
 	if room == noValue || deviceTime == noValue {
 		return nil, fmt.Errorf("error while checking availability: you must choose a room and your current time")
 	}
