@@ -36,6 +36,7 @@ const nothing = ""
 const dot = "·"
 const minus = "-"
 const newLine = "\n"
+const notAvailable = "N/A"
 
 type Department struct {
 	Id   string `json:"id"`
@@ -280,14 +281,24 @@ func GetDailyCourses(url string, deviceTime t.Time) ([]Course, error) {
 }
 
 func getCourseTimeAndType(e *colly.HTMLElement) (string, string, string) {
+	startTime := notAvailable
+	endTime  := notAvailable
+	cType := notAvailable
+
 	text := e.ChildText(courseTimeAndType)
 	text = strings.ReplaceAll(text, space, nothing)
 	text = strings.ReplaceAll(text, newLine, nothing)
 
 	timesAndType := strings.Split(text, dot)
+	if len(timesAndType) > 1 {
+		courseTimes := strings.Split(timesAndType[0], minus)
+		if len(courseTimes) > 1 {
+			startTime = courseTimes[0]
+			endTime = courseTimes[1]
+		}
 
-	times := timesAndType[0]
-	courseTimes := strings.Split(times, minus)
+		cType = timesAndType[1]
+	}
 
-	return courseTimes[0], courseTimes[1], timesAndType[1]
+	return startTime, endTime, cType
 }

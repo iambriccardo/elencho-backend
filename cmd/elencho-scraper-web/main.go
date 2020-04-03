@@ -14,7 +14,7 @@ import (
 func main() {
 	port, err := el.GetEnv("PORT")
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("an error occurred in web: %q", err)
 	}
 
 	router := gin.New()
@@ -22,7 +22,7 @@ func main() {
 
 	poolSize, err := el.GetIntEnv("POOL_SIZE")
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("an error occurred in web: %q", err)
 	}
 
 	pool := make(chan func(r *el.Request, db *el.Database), poolSize)
@@ -31,7 +31,7 @@ func main() {
 	db := el.Make()
 	err = db.Open()
 	if err != nil {
-		fmt.Printf("an error occurred the web: %q", err)
+		log.Fatalf("an error occurred in web: %q", err)
 	}
 	defer db.Close()
 
@@ -63,7 +63,7 @@ func main() {
 	err = router.Run(":" + port)
 	if err != nil {
 		close(pool)
-		fmt.Printf("an error occurred in web: %q", err)
+		log.Fatalf("an error occurred in web: %q", err)
 	}
 }
 
