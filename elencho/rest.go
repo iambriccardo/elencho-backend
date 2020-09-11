@@ -10,6 +10,7 @@ const (
 	GetDegrees
 	GetStudyPlans
 	CheckAvailability
+	Refresh
 )
 
 func EnabledEndpoints() []EndPoint {
@@ -19,11 +20,12 @@ func EnabledEndpoints() []EndPoint {
 		GetDegrees,
 		GetStudyPlans,
 		CheckAvailability,
+		Refresh,
 	}
 }
 
 func (e EndPoint) String() string {
-	return [...]string{"/", "/departments", "/degrees", "/studyPlans", "/availability"}[e]
+	return [...]string{"/", "/departments", "/degrees", "/studyPlans", "/availability", "/refresh"}[e]
 }
 
 type Request struct {

@@ -100,7 +100,7 @@ func handleRequest(r *el.Request, db *el.Database, responseChan chan<- el.Respon
 
 	switch r.EndPoint {
 	case el.Base:
-		baseResponse.Content = gin.H{"Response": "The service is up and running."}
+		baseResponse.Content = gin.H{"status": "The service is up and running."}
 		break
 	case el.GetDepartments:
 		ds, err := el.Departments(db)
@@ -137,6 +137,10 @@ func handleRequest(r *el.Request, db *el.Database, responseChan chan<- el.Respon
 		} else {
 			baseResponse.Content = at
 		}
+		break
+	case el.Refresh:
+		go el.Start(db) // We launch the work asynchronously.
+		baseResponse.Content = gin.H{"status": "The refresh has been started."}
 		break
 	default:
 		// We do not perform anything because the server is unable to handle such kind of request,

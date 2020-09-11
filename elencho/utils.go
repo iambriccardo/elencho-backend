@@ -34,7 +34,7 @@ func convertTimeToString(time t.Time, format string) string {
 func GetEnv(key string) (string, error) {
 	variable := os.Getenv(key)
 	if variable == "" {
-		return "", fmt.Errorf("variable %s is not found in the .env file", variable)
+		return "", fmt.Errorf("variable with key %s is not found in the .env file", key)
 	}
 
 	return variable, nil

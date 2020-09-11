@@ -21,7 +21,7 @@ require (
 	github.com/manucorporat/sse v0.0.0-20150604091100-c142f0f1baea // indirect
 	github.com/mattn/go-colorable v0.0.0-20150625154642-40e4aedc8fab // indirect
 	github.com/mattn/go-isatty v0.0.0-20150814002629-7fcbc72f853b // indirect
-	github.com/robfig/cron/v3 v3.0.0
+	github.com/robfig/cron/v3 v3.0.0 // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/temoto/robotstxt v1.1.1 // indirect
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
