@@ -58,7 +58,7 @@ func CheckRoomAvailability(room string, deviceTime string) (map[string]interface
 		return nil, fmt.Errorf("error while checking availability: %q", err)
 	}
 
-	log.Printf("checking availability for room %s from time %s", room, deviceTime)
+	log.Printf("checking availability for room %s from time %s\n", room, deviceTime)
 	courses, err := GetDailyCourses(timetableBaseUrl, *deviceTimeConverted)
 	if err != nil {
 		return nil, fmt.Errorf("error while checking availability: %q", err)
@@ -75,7 +75,7 @@ func CheckRoomAvailability(room string, deviceTime string) (map[string]interface
 
 	courses = getCoursesByRoom(courses, room)
 
-	log.Printf("computing available time slots")
+	log.Printf("computing available time slots...\n")
 	timeSlots, isDayEmpty := getAvailableTimeSlots(courses)
 	return map[string]interface{}{
 		"room":           room,
@@ -148,34 +148,34 @@ func computeBusyTimeSlots(courses []Course) []Course {
 		} else {
 			found := false
 			i := 0
-			fmt.Printf("Course 1 %d-%d\n", course1.Start.Hour(), course1.End.Hour())
+			fmt.Printf("course 1 %d-%d\n", course1.Start.Hour(), course1.End.Hour())
 			for i < len(filteredCourses) && !found {
 				course2 := filteredCourses[i]
-				fmt.Printf("Course 2 %d-%d\n", course2.Start.Hour(), course2.End.Hour())
+				fmt.Printf("course 2 %d-%d\n", course2.Start.Hour(), course2.End.Hour())
 				if haveSameTime(course1, course2) {
 					found = true
-					fmt.Println("Same time")
+					fmt.Println("same time")
 				} else if isWithinOtherCourse(course1, course2) {
 					found = true
-					fmt.Println("Within")
+					fmt.Println("within")
 				} else if isLongerThanOtherCourse(course1, course2) {
 					filteredCourses[i] = course1
 					found = true
-					fmt.Println("Longer")
+					fmt.Println("longer")
 				} else if isOverlappingWithOtherCourse(course1, course2) {
 					filteredCourses[i] = Course{
 						Start: course2.Start,
 						End:   course1.End,
 					}
 					found = true
-					fmt.Println("Overlapping")
+					fmt.Println("overlapping")
 				}
 				i++
 			}
 
 			if !found {
 				filteredCourses = append(filteredCourses, course1)
-				fmt.Println("Inserting")
+				fmt.Println("inserting...")
 			}
 
 			fmt.Println("\n----\n")
@@ -186,34 +186,34 @@ func computeBusyTimeSlots(courses []Course) []Course {
 }
 
 func haveSameTime(course1 Course, course2 Course) bool {
-	return course1.Start.Equal(course2.Start) && course1.End.Equal(course2.End)
+	return course1.Start.Equal(course2.Start.Time) && course1.End.Equal(course2.End.Time)
 }
 
 func isWithinOtherCourse(course1 Course, course2 Course) bool {
-	return (course1.Start.Equal(course2.Start) || course1.Start.After(course2.Start)) && (course1.End.Equal(course2.End) || course1.End.Before(course2.End))
+	return (course1.Start.Equal(course2.Start.Time) || course1.Start.After(course2.Start.Time)) && (course1.End.Equal(course2.End.Time) || course1.End.Before(course2.End.Time))
 }
 
 func isLongerThanOtherCourse(course1 Course, course2 Course) bool {
-	return course1.Start.Equal(course2.Start) && course1.End.After(course2.End)
+	return course1.Start.Equal(course2.Start.Time) && course1.End.After(course2.End.Time)
 }
 
 func isOverlappingWithOtherCourse(course1 Course, course2 Course) bool {
-	return course1.Start.After(course2.Start) && course1.Start.Before(course2.End) && course1.End.After(course2.End)
+	return course1.Start.After(course2.Start.Time) && course1.Start.Before(course2.End.Time) && course1.End.After(course2.End.Time)
 }
 
 func havePause(course1 Course, course2 Course) bool {
-	return !course1.End.Equal(course2.Start)
+	return !course1.End.Equal(course2.Start.Time)
 }
 
 func isCourseFinished(course Course, deviceTime time.Time) bool {
-	return deviceTime.After(course.End)
+	return deviceTime.After(course.End.Time)
 }
 
 func isCourseNow(course Course, deviceTime time.Time) bool {
-	return (deviceTime.Equal(course.Start) || deviceTime.After(course.Start)) &&
-		(deviceTime.Equal(course.End) || deviceTime.Before(course.End))
+	return (deviceTime.Equal(course.Start.Time) || deviceTime.After(course.Start.Time)) &&
+		(deviceTime.Equal(course.End.Time) || deviceTime.Before(course.End.Time))
 }
 
 func isCourseUpcoming(course Course, deviceTime time.Time) bool {
-	return deviceTime.Before(course.Start)
+	return deviceTime.Before(course.Start.Time)
 }

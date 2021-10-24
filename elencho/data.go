@@ -57,12 +57,21 @@ type StudyPlan struct {
 }
 
 type Course struct {
-	Start       t.Time `json:"start"`
-	End         t.Time `json:"end"`
+	Start       JSONTime `json:"start"`
+	End         JSONTime `json:"end"`
 	Room        string `json:"room"`
 	Description string `json:"description"`
 	Professor   string `json:"professor"`
 	Type        string `json:"type"`
+}
+
+type JSONTime struct {
+	t.Time
+}
+
+func (t JSONTime)MarshalJSON() ([]byte, error) {
+	stamp := fmt.Sprintf("\"%s\"", t.Format(outputDateTimeFormat))
+	return []byte(stamp), nil
 }
 
 func (db *Database) ClearTables() {
@@ -250,12 +259,12 @@ func GetDailyCourses(url string, deviceTime t.Time) ([]Course, error) {
 
 			start, err := computeCourseDateTime(day, year, courseStartTime)
 			if err == nil {
-				course.Start = *start
+				course.Start = JSONTime{*start}
 			}
 
 			end, err := computeCourseDateTime(day, year, courseEndTime)
 			if err == nil {
-				course.End = *end
+				course.End = JSONTime{*end}
 			}
 
 			courseRoom := e.ChildText(courseRoomQuery)
